@@ -1,8 +1,9 @@
 {
   "info": {
-    "_postman_id": "c8f2b3a0-1b2c-4d5e-8f9a-0b1c2d3e4f5a",
-    "name": "Fakeflix API",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    "_postman_id": "a1b2c3d4-e5f6-7890-1234-abcdef123456",
+    "name": "Fakeflix API - Full Workflow",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Coleção completa para criar e fazer streaming de vídeos na Fakeflix API."
   },
   "item": [
     {
@@ -15,12 +16,12 @@
           "formdata": [
             {
               "key": "title",
-              "value": "A Fantástica Jornada do Código Limpo",
+              "value": "A Odisséia do Streaming",
               "type": "text"
             },
             {
               "key": "description",
-              "value": "Uma aventura épica sobre um desenvolvedor refatorando um sistema legado, enfrentando os monstros do código macarrão e os dragões do débito técnico.",
+              "value": "Um épico sobre bytes viajando pela rede para chegar até a sua tela.",
               "type": "text"
             },
             {
@@ -36,19 +37,85 @@
           ]
         },
         "url": {
-          "raw": "http://localhost:3000/movies",
-          "protocol": "http",
+          "raw": "{{baseUrl}}/movies",
           "host": [
-            "localhost"
+            "{{baseUrl}}"
           ],
-          "port": "3000",
           "path": [
             "movies"
           ]
         },
-        "description": "Cria um novo conteúdo do tipo Movie. Requer o envio de um título, descrição, um arquivo de vídeo (.mp4) e um arquivo de thumbnail (.jpg, .png) como multipart/form-data."
+        "description": "Cria um novo conteúdo do tipo Movie. Após executar esta requisição, você precisará obter o ID do vídeo criado no seu banco de dados e colocá-lo na variável de coleção `videoID` para testar o streaming."
       },
       "response": []
+    },
+    {
+      "name": "Video Streaming",
+      "item": [
+        {
+          "name": "Stream Video (Partial Content)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Range",
+                "value": "bytes=0-1048575",
+                "description": "Solicita o primeiro 1MB do arquivo. O servidor deve responder com o status 206 Partial Content."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/videos/{{videoID}}/stream",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "videos",
+                "{{videoID}}",
+                "stream"
+              ]
+            },
+            "description": "Testa o streaming de um pedaço do vídeo. Utilize um `videoID` válido obtido após a criação de um filme."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Video (Full Content)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Range",
+                "value": "bytes=0-1048575",
+                "disabled": true,
+                "description": "O cabeçalho Range está presente mas desabilitado. O servidor deve enviar o arquivo completo com o status 200 OK."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/videos/{{videoID}}/stream",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "videos",
+                "{{videoID}}",
+                "stream"
+              ]
+            },
+            "description": "Testa o download do arquivo de vídeo completo. Utilize um `videoID` válido obtido após a criação de um filme."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "videoID",
+      "value": "COLE_O_ID_DO_VIDEO_AQUI"
     }
   ]
 }

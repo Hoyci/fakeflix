@@ -11,6 +11,7 @@ import (
 	"github.com/hoyci/fakeflix/internal/infra/media"
 	httphandler "github.com/hoyci/fakeflix/internal/interface/http"
 	"github.com/hoyci/fakeflix/internal/usecase/movie"
+	videousecase "github.com/hoyci/fakeflix/internal/usecase/video"
 )
 
 func main() {
@@ -32,14 +33,19 @@ func main() {
 	defer sqlDB.Close()
 
 	contentRepo := postgres.NewContentRepository(db)
+	videoRepo := postgres.NewVideoRepository(db)
+
 	mediaService := media.NewLocalMediaService()
 
 	createMovieUseCase := movie.NewCreateMovieUseCase(contentRepo, mediaService)
+	getStreamInfoUseCase := videousecase.NewGetStreamInfoUseCase(videoRepo)
 
 	movieHandler := httphandler.NewMovieHandler(createMovieUseCase)
+	videoHandler := httphandler.NewVideoHandler(getStreamInfoUseCase, mediaService, appLogger)
 
 	router := chi.NewRouter()
 	router.Post("/movies", movieHandler.CreateMovie)
+	router.Get("/videos/{videoID}/stream", videoHandler.StreamVideo)
 
 	listenAddr := fmt.Sprintf(":%d", cfg.Port)
 	appLogger.Info("server is starting", "address", listenAddr)
