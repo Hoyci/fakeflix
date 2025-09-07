@@ -4,6 +4,8 @@ import (
 	"context"
 	"mime/multipart"
 
+	"github.com/charmbracelet/log"
+
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/hoyci/fakeflix/internal/domain/content"
 	"github.com/hoyci/fakeflix/internal/domain/movie"
@@ -38,24 +40,30 @@ type CreateMovieOutputDTO struct {
 type CreateMovieUseCase struct {
 	contentRepo  content.Repository
 	mediaService media.MediaService
+	logger       *log.Logger
 }
 
-func NewCreateMovieUseCase(contentRepo content.Repository, mediaService media.MediaService) *CreateMovieUseCase {
+func NewCreateMovieUseCase(contentRepo content.Repository, mediaService media.MediaService, logger *log.Logger) *CreateMovieUseCase {
 	return &CreateMovieUseCase{
 		contentRepo:  contentRepo,
 		mediaService: mediaService,
+		logger:       logger,
 	}
 }
 
 func (uc *CreateMovieUseCase) Execute(ctx context.Context, input CreateMovieInputDTO) (*CreateMovieOutputDTO, error) {
+	uc.logger.Debug("Starting create movie use case execution", "title", input.Title)
+
 	videoInfo, err := uc.mediaService.Store(input.Video, "upload/videos")
 	if err != nil {
+		uc.logger.Error("Failed to store video", "filename", input.Video.Filename, "error", err)
 		return nil, fault.New(
 			"error while saving video",
 			fault.WithKind(fault.KindUnexpected),
 			fault.WithError(err),
 		)
 	}
+	uc.logger.Debug("Video file stored", "url", videoInfo.URL)
 
 	var thumbInfo *media.StoredFileInfo
 	if input.Thumbnail != nil {
@@ -115,12 +123,15 @@ func (uc *CreateMovieUseCase) Execute(ctx context.Context, input CreateMovieInpu
 
 	err = uc.contentRepo.Save(ctx, contentEntity)
 	if err != nil {
+		uc.logger.Error("Failed to save content aggregate", "contentID", contentEntity.ID(), "error", err)
 		return nil, fault.New(
 			"failed to save movie",
 			fault.WithKind(fault.KindUnexpected),
 			fault.WithError(err),
 		)
 	}
+
+	uc.logger.Debug("Content aggregate saved successfully", "contentID", contentEntity.ID())
 
 	return &CreateMovieOutputDTO{
 		ID:          contentEntity.ID(),

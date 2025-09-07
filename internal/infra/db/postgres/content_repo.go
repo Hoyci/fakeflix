@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/charmbracelet/log"
 	"github.com/hoyci/fakeflix/internal/domain/content"
 	"github.com/hoyci/fakeflix/internal/domain/movie"
 	"github.com/hoyci/fakeflix/internal/domain/thumbnail"
@@ -12,14 +13,18 @@ import (
 )
 
 type contentRepository struct {
-	db *gorm.DB
+	db     *gorm.DB
+	logger *log.Logger
 }
 
-func NewContentRepository(db *gorm.DB) content.Repository {
-	return &contentRepository{db: db}
+func NewContentRepository(db *gorm.DB, logger *log.Logger) content.Repository {
+	return &contentRepository{db: db, logger: logger}
 }
 
 func (r *contentRepository) Save(ctx context.Context, contentEntity *content.Content) error {
+	log := r.logger.With("contentID", contentEntity.ID())
+	log.Debug("Starting save transaction for content aggregate")
+
 	tx := r.db.WithContext(ctx).Begin()
 	if tx.Error != nil {
 		return tx.Error
@@ -65,6 +70,7 @@ func (r *contentRepository) Save(ctx context.Context, contentEntity *content.Con
 		UpdatedAt:   contentEntity.UpdatedAt(),
 	}
 	if err := tx.Create(&contentModel).Error; err != nil {
+		log.Error("Failed to create content model in transaction", "error", err)
 		return err
 	}
 
@@ -80,6 +86,7 @@ func (r *contentRepository) Save(ctx context.Context, contentEntity *content.Con
 		return err
 	}
 
+	log.Debug("Finishing save transaction")
 	return tx.Commit().Error
 }
 

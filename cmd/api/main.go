@@ -32,15 +32,14 @@ func main() {
 	}
 	defer sqlDB.Close()
 
-	contentRepo := postgres.NewContentRepository(db)
-	videoRepo := postgres.NewVideoRepository(db)
+	contentRepo := postgres.NewContentRepository(db, appLogger)
+	videoRepo := postgres.NewVideoRepository(db, appLogger)
+	mediaService := media.NewLocalMediaService(appLogger)
 
-	mediaService := media.NewLocalMediaService()
+	createMovieUseCase := movie.NewCreateMovieUseCase(contentRepo, mediaService, appLogger)
+	getStreamInfoUseCase := videousecase.NewGetStreamInfoUseCase(videoRepo, appLogger)
 
-	createMovieUseCase := movie.NewCreateMovieUseCase(contentRepo, mediaService)
-	getStreamInfoUseCase := videousecase.NewGetStreamInfoUseCase(videoRepo)
-
-	movieHandler := httphandler.NewMovieHandler(createMovieUseCase)
+	movieHandler := httphandler.NewMovieHandler(createMovieUseCase, appLogger)
 	videoHandler := httphandler.NewVideoHandler(getStreamInfoUseCase, mediaService, appLogger)
 
 	router := chi.NewRouter()
