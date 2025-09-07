@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/hoyci/fakeflix/internal/infra/media"
 	"github.com/hoyci/fakeflix/internal/usecase/video"
+	"github.com/hoyci/fakeflix/pkg/fault"
 	"github.com/hoyci/fakeflix/pkg/httputils"
 )
 
@@ -29,11 +30,22 @@ func NewVideoHandler(uc *video.GetStreamInfoUseCase, ms media.MediaService, logg
 func (h *VideoHandler) StreamVideo(w http.ResponseWriter, r *http.Request) {
 	videoID := chi.URLParam(r, "videoID")
 
-	h.logger.Info("Received streaming request", "videoID", videoID, "range_header", r.Header.Get("Range"))
+	requestDTO := video.GetStreamInfoInputDTO{
+		VideoID: videoID,
+	}
 
-	input := video.GetStreamInfoInputDTO{VideoID: videoID}
+	if err := requestDTO.Validate(); err != nil {
+		h.logger.Warn("Request validation failed", "error", err)
+		httputils.RespondWithError(w, fault.New(
+			err.Error(),
+			fault.WithKind(fault.KindValidation),
+		))
+		return
+	}
 
-	output, err := h.getStreamInfoUseCase.Execute(r.Context(), input)
+	h.logger.Info("Received streaming request", "videoID", requestDTO.VideoID, "range_header", r.Header.Get("Range"))
+
+	output, err := h.getStreamInfoUseCase.Execute(r.Context(), requestDTO)
 	if err != nil {
 		httputils.RespondWithError(w, err)
 		return
