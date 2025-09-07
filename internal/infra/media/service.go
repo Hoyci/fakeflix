@@ -19,6 +19,7 @@ type StoredFileInfo struct {
 
 type MediaService interface {
 	Store(fileHeader *multipart.FileHeader, destFolder string) (*StoredFileInfo, error)
+	GetStream(filePath string) (io.ReadSeekCloser, os.FileInfo, error)
 }
 
 type localMediaService struct{}
@@ -49,6 +50,21 @@ func (s *localMediaService) Store(fileHeader *multipart.FileHeader, destFolder s
 	}
 
 	return info, nil
+}
+
+func (s *localMediaService) GetStream(filePath string) (io.ReadSeekCloser, os.FileInfo, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	fileStat, err := file.Stat()
+	if err != nil {
+		file.Close()
+		return nil, nil, err
+	}
+
+	return file, fileStat, nil
 }
 
 func saveFile(fileHeader *multipart.FileHeader, destPath string) error {

@@ -12,5 +12,4 @@ var (
 
 type Repository interface {
 	Save(ctx context.Context, content *Content) error
-	// FindByID(ctx context.Context, id string) (*Content, error)
 }
