@@ -5,19 +5,21 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi"
-	"github.com/hoyci/fakeflix/internal/config"
-	pg "github.com/hoyci/fakeflix/internal/infra/database"
+	"github.com/hoyci/fakeflix/internal/infra/config"
+	"github.com/hoyci/fakeflix/internal/infra/db/postgres"
 	"github.com/hoyci/fakeflix/internal/infra/logger"
-	"github.com/hoyci/fakeflix/internal/modules/video"
+	"github.com/hoyci/fakeflix/internal/infra/media"
+	httphandler "github.com/hoyci/fakeflix/internal/interface/http"
+	"github.com/hoyci/fakeflix/internal/usecase/movie"
 )
 
 func main() {
 	cfg := config.GetConfig()
 
 	appLogger := logger.NewLogger(cfg)
-	appLogger.Info("starting bookday application", "app_name", cfg.AppName, "env", cfg.Environment)
+	appLogger.Info(fmt.Sprintf("starting %s application", cfg.AppName), "env", cfg.Environment)
 
-	db, err := pg.NewConnection(cfg)
+	db, err := postgres.NewConnection(cfg)
 	if err != nil {
 		appLogger.Fatal("could not connect to the database", "error", err)
 	}
@@ -29,13 +31,15 @@ func main() {
 	}
 	defer sqlDB.Close()
 
+	contentRepo := postgres.NewContentRepository(db)
+	mediaService := media.NewLocalMediaService()
+
+	createMovieUseCase := movie.NewCreateMovieUseCase(contentRepo, mediaService)
+
+	movieHandler := httphandler.NewMovieHandler(createMovieUseCase)
+
 	router := chi.NewRouter()
-
-	repo := video.NewRepository(db)
-	service := video.NewService(repo, appLogger)
-	handler := video.NewHTTPHandler(service, appLogger)
-
-	handler.RegisterRoutes(router)
+	router.Post("/movies", movieHandler.CreateMovie)
 
 	listenAddr := fmt.Sprintf(":%d", cfg.Port)
 	appLogger.Info("server is starting", "address", listenAddr)

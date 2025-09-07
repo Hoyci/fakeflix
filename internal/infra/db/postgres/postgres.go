@@ -1,9 +1,9 @@
-package pg
+package postgres
 
 import (
 	"fmt"
 
-	"github.com/hoyci/fakeflix/internal/config"
+	"github.com/hoyci/fakeflix/internal/infra/config"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )

@@ -9,7 +9,7 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	pgMigrate "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
-	"github.com/hoyci/fakeflix/internal/config"
+	"github.com/hoyci/fakeflix/internal/infra/config"
 	_ "github.com/lib/pq"
 )
 
@@ -32,7 +32,7 @@ func main() {
 	}
 
 	m, err := migrate.NewWithDatabaseInstance(
-		"file://internal/infra/database/migrate/migrations",
+		"file://internal/infra/db/postgres/migrate/migrations",
 		cfg.DBDatabase,
 		driver,
 	)

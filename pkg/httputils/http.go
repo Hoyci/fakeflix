@@ -7,16 +7,34 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/hoyci/fakeflix/packages/fault"
+	"github.com/hoyci/fakeflix/pkg/fault"
 )
 
 func RespondWithError(w http.ResponseWriter, err error) {
 	var f *fault.Error
 	if errors.As(err, &f) {
-		RespondWithJSON(w, f.Code, map[string]string{"error": f.Message})
+		statusCode := mapKindToStatusCode(f.Kind)
+		RespondWithJSON(w, statusCode, map[string]string{"error": f.Message})
 		return
 	}
 	RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "an unexpected error occurred"})
+}
+
+func mapKindToStatusCode(kind string) int {
+	switch kind {
+	case fault.KindNotFound:
+		return http.StatusNotFound
+	case fault.KindValidation:
+		return http.StatusUnprocessableEntity
+	case fault.KindConflict:
+		return http.StatusConflict
+	case fault.KindUnauthenticated:
+		return http.StatusUnauthorized
+	case fault.KindForbidden:
+		return http.StatusForbidden
+	default:
+		return http.StatusInternalServerError
+	}
 }
 
 func RespondWithJSON(w http.ResponseWriter, code int, payload any) {

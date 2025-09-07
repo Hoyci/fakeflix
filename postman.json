@@ -1,0 +1,54 @@
+{
+  "info": {
+    "_postman_id": "c8f2b3a0-1b2c-4d5e-8f9a-0b1c2d3e4f5a",
+    "name": "Fakeflix API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Create New Movie",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "title",
+              "value": "A Fantástica Jornada do Código Limpo",
+              "type": "text"
+            },
+            {
+              "key": "description",
+              "value": "Uma aventura épica sobre um desenvolvedor refatorando um sistema legado, enfrentando os monstros do código macarrão e os dragões do débito técnico.",
+              "type": "text"
+            },
+            {
+              "key": "video",
+              "type": "file",
+              "src": []
+            },
+            {
+              "key": "thumbnail",
+              "type": "file",
+              "src": []
+            }
+          ]
+        },
+        "url": {
+          "raw": "http://localhost:3000/movies",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "movies"
+          ]
+        },
+        "description": "Cria um novo conteúdo do tipo Movie. Requer o envio de um título, descrição, um arquivo de vídeo (.mp4) e um arquivo de thumbnail (.jpg, .png) como multipart/form-data."
+      },
+      "response": []
+    }
+  ]
+}

@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/charmbracelet/log"
-	"github.com/hoyci/fakeflix/internal/config"
+	"github.com/hoyci/fakeflix/internal/infra/config"
 )
 
 func NewLogger(cfg *config.Config) *log.Logger {
